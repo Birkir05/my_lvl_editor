@@ -1,6 +1,8 @@
 import pygame as py
+from os import path
 from settings import *
 from menu import Menu
+from mouse_select import Spritesheet_croper
 
 class Editor:
 
@@ -9,12 +11,22 @@ class Editor:
         self.clock = py.time.Clock()
         self.screen = py.display.set_mode((menu_width, menu_height))
         self.running = True
+        self.load_data()
 
         self.font_name = py.font.match_font("arial")
         self.menu = Menu(self)
+        self.sprite_croper = Spritesheet_croper(self)
+        self.menu.run_menu()
     
     def load_data(self):
-        pass
+        
+        main_dir = path.dirname(__file__)
+        tiles_img_dir = path.join(main_dir, "tiles_img")
+        deco_img_dir = path.join(main_dir, "deco_img")
+
+        # Spritesheet Croper data
+        self.grass_tile_img = py.image.load(path.join(tiles_img_dir, "GrassTiles.png"))
+
 
     def events(self):
         for event in py.event.get():
@@ -35,3 +47,5 @@ class Editor:
 
 editor = Editor()
 editor.menu.run_menu()
+
+py.quit()

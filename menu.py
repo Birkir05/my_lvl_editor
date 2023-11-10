@@ -1,6 +1,6 @@
 import pygame as py 
 from settings import *
-
+from mouse_select import Spritesheet_croper
 class Menu:
     def __init__(self, editor):
         self.editor = editor
@@ -9,9 +9,10 @@ class Menu:
 
         self.main_opts = ["LvL Editor", 
                           "Spritesheet croper", 
-                          "Spritsheet combiner", 
+                          "Spritesheet combiner", 
                           "Spritesheet view", 
                           "Quit"]
+        
         self.current_opt = 0
         self.opt_posx = menu_width//2 - 80
         self.opt_posy = 60
@@ -30,6 +31,10 @@ class Menu:
                 elif event.key == py.K_DOWN:
                     move = 1
                     self.moving_selection(move)
+                if event.key == py.K_RETURN:
+                    if self.current_opt == 1:
+                        self.active = False
+                        self.editor.sprite_croper.run_croper()
                 
     def main_menu(self):
         separation = 60
@@ -39,7 +44,7 @@ class Menu:
         
     def run_menu(self):
         self.active = True
-        
+
         while self.active:
             self.menu_events()
 
