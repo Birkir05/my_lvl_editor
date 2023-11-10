@@ -45,16 +45,16 @@ class Spritesheet_croper:
                     self.end_mx, self.end_my = e.pos[0]//SCALE, e.pos[1]//SCALE
 
     def draw_croper(self):
-        self.editor.screen.blit(self.tile_img, (0,0))
+        self.screen.blit(self.tile_img, (0,0))
 
-        self.editor.draw_text(self.editor.screen, (self.mx, self.my), 25, WHITE, self.WIDTH-50, 50)
-        self.editor.draw_text(self.editor.screen, (self.init_mx, self.init_my, self.end_mx, self.end_my), 25, WHITE, self.WIDTH-50, 100)
+        self.editor.draw_text(self.screen, (self.mx, self.my), 25, WHITE, self.WIDTH-50, 50)
+        self.editor.draw_text(self.screen, (self.init_mx, self.init_my, self.end_mx, self.end_my), 25, WHITE, self.WIDTH-50, 100)
         self.select_box()
 
 
     def run_croper(self):
         self.running = True
-        self.editor.screen = py.display.set_mode((self.WIDTH*SCALE, self.HEIGHT*SCALE))
+        self.screen = self.editor.screen((self.WIDTH*SCALE, self.HEIGHT*SCALE))
 
         while self.running:
             self.mx, self.my = py.mouse.get_pos() 
@@ -64,7 +64,7 @@ class Spritesheet_croper:
             self.croper_events()
 
             # Draw
-            self.editor.draw(self.draw_croper)
+            self.editor.draw(self.screen, self.draw_croper)
 
 
     def select_box(self):
@@ -76,5 +76,5 @@ class Spritesheet_croper:
             width = abs(current_x*SCALE - start_x*SCALE) + SCALE
             height = abs(current_y*SCALE - start_y*SCALE) + SCALE
             box = py.Rect(start_x*SCALE, start_y*SCALE, width, height)
-            py.draw.rect(self.editor.screen, BLUE, box, 1)
-            self.editor.draw_text(self.editor.screen, str((width//SCALE, height//SCALE)), 25, BLUE, 45, 150)
+            py.draw.rect(self.screen, BLUE, box, 1)
+            self.editor.draw_text(self.screen, str((width//SCALE, height//SCALE)), 25, BLUE, 45, 150)

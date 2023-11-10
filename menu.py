@@ -39,16 +39,17 @@ class Menu:
     def main_menu(self):
         separation = 60
         for i, opt in enumerate(self.main_opts):
-            self.editor.draw_text(self.editor.screen, opt, 25, WHITE, menu_width//2-60, i*separation+60)
-        self.editor.draw_text(self.editor.screen, ">", 22, ORANGE, self.opt_posx, self.opt_posy*self.current_opt+60)
+            self.editor.draw_text(self.screen, opt, 25, WHITE, menu_width//2-60, i*separation+60)
+        self.editor.draw_text(self.screen, ">", 22, ORANGE, self.opt_posx, self.opt_posy*self.current_opt+60)
         
     def run_menu(self):
         self.active = True
+        self.screen = self.editor.screen((menu_width, menu_height))
 
         while self.active:
             self.menu_events()
 
-            self.editor.draw(self.main_menu)
+            self.editor.draw(self.screen, self.main_menu)
 
     def moving_selection(self, move_amont):
         self.current_opt = (self.current_opt+move_amont) % len(self.main_opts)

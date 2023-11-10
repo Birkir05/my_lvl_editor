@@ -9,7 +9,7 @@ class Editor:
     def __init__(self):
         py.init()
         self.clock = py.time.Clock()
-        self.screen = py.display.set_mode((menu_width, menu_height))
+        self.screen = py.display.set_mode
         self.running = True
         self.load_data()
 
@@ -33,8 +33,8 @@ class Editor:
             if event.type == py.QUIT:
                 self.running = False
     
-    def draw(self, draw_method): # potentially possible to use kwargs here
-        self.screen.fill(BLACK)
+    def draw(self, surf, draw_method): # potentially possible to use kwargs here
+        surf.fill(BLACK)
         draw_method()
         py.display.flip()
 
