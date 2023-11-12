@@ -9,7 +9,7 @@ class Editor:
     def __init__(self):
         py.init()
         self.clock = py.time.Clock()
-        self.screen = py.display.set_mode
+        self.screen = py.display.set_mode((menu_width, menu_height))
         self.running = True
         self.load_data()
 
@@ -25,8 +25,8 @@ class Editor:
         deco_img_dir = path.join(main_dir, "deco_img")
 
         # Spritesheet Croper data
-        self.grass_tile_img = py.image.load(path.join(tiles_img_dir, "GrassTiles.png"))
-
+        self.grass_tileset = py.image.load(path.join(tiles_img_dir, "GrassTiles.png")).convert_alpha()
+        self.sky_tileset = py.image.load(path.join(tiles_img_dir, "Tileset.png")).convert_alpha()
 
     def events(self):
         for event in py.event.get():

@@ -6,55 +6,75 @@ class Spritesheet_croper:
 
     def __init__(self, editor):
         self.running = False
-        self.editor = editor
+        self.e = editor
+
+        self.cropped_imgs = []
 
         self.init_mx, self.init_my = 0, 0
         self.end_mx, self.end_my = 0, 0
         self.clicking = False
+        self.right_clicking = False
         
-        self.load_sheet()
 
     def load_sheet(self):
-        self.WIDTH = self.editor.grass_tile_img.get_width()
-        self.HEIGHT = self.editor.grass_tile_img.get_height()
-        self.tile_img = py.transform.scale(self.editor.grass_tile_img, (self.WIDTH*SCALE, self.HEIGHT*SCALE))
+        self.WIDTH = self.e.sky_tileset.get_width()
+        self.HEIGHT = self.e.sky_tileset.get_height()
+        # Redda þessari línu... 
+        # passa að hafa alpha gildi þegar crop fallið er notað
+        self.tile_img = py.transform.scale(self.e.sky_tileset, (self.WIDTH*SCALE, self.HEIGHT*SCALE))
+        self.unscaled_img = self.e.sky_tileset
 
     def croper_events(self):
         for e in py.event.get():
             if e.type == py.QUIT:
                 self.running = False
-                self.editor.running = False
+                self.e.running = False
 
             if e.type == py.KEYDOWN:
                 if e.key == py.K_g:
                     grid_is_on = not grid_is_on
                 if e.key == py.K_q:
                     self.running = False
-                    self.editor.running = False
+                    self.e.running = False
                 if e.key == py.K_ESCAPE:
                     self.running = False
-                    self.editor.menu.run_menu()
+                    self.e.menu.run_menu()
+                if e.key == py.K_s: #and e.key == py.K_LCTRL:
+                    self.save_img_sheet()
 
             if e.type == py.MOUSEBUTTONDOWN:
                 if e.button == 1:
                     self.clicking = True
                     self.init_mx, self.init_my = e.pos[0]//SCALE, e.pos[1]//SCALE
+                if e.button == 3:
+                    self.right_clicking = True
             elif e.type == py.MOUSEBUTTONUP:
                 if e.button == 1:
                     self.clicking = False
                     self.end_mx, self.end_my = e.pos[0]//SCALE, e.pos[1]//SCALE
 
-    def draw_croper(self):
-        self.screen.blit(self.tile_img, (0,0))
+                    # Þarft að halda inni hægri takka músarinnar 
+                    # áður en maður sleppir vinstri
+                    if self.right_clicking:  
+                        self.crop()
+                        print(self.cropped_imgs)
+                        self.right_clicking = False
 
-        self.editor.draw_text(self.screen, (self.mx, self.my), 25, WHITE, self.WIDTH-50, 50)
-        self.editor.draw_text(self.screen, (self.init_mx, self.init_my, self.end_mx, self.end_my), 25, WHITE, self.WIDTH-50, 100)
+
+    def draw_croper(self):
+        self.e.screen.blit(self.tile_img, (0,0))
+
+        self.e.draw_text(self.e.screen, (self.mx, self.my), 25, WHITE, self.WIDTH-50, 50)
+        self.e.draw_text(self.e.screen, (self.init_mx, self.init_my, self.end_mx, self.end_my), 25, WHITE, self.WIDTH-50, 100)
         self.select_box()
 
 
     def run_croper(self):
+        # Þarf að breyta þessu. betra að hlaða inn myndum við fyrsta tilvik klasans
+        self.load_sheet() 
         self.running = True
-        self.screen = self.editor.screen((self.WIDTH*SCALE, self.HEIGHT*SCALE))
+        screen = py.display.set_mode
+        self.e.screen = screen((self.WIDTH*SCALE, self.HEIGHT*SCALE))
 
         while self.running:
             self.mx, self.my = py.mouse.get_pos() 
@@ -64,7 +84,7 @@ class Spritesheet_croper:
             self.croper_events()
 
             # Draw
-            self.editor.draw(self.screen, self.draw_croper)
+            self.e.draw(self.e.screen, self.draw_croper)
 
 
     def select_box(self):
@@ -76,5 +96,43 @@ class Spritesheet_croper:
             width = abs(current_x*SCALE - start_x*SCALE) + SCALE
             height = abs(current_y*SCALE - start_y*SCALE) + SCALE
             box = py.Rect(start_x*SCALE, start_y*SCALE, width, height)
-            py.draw.rect(self.screen, BLUE, box, 1)
-            self.editor.draw_text(self.screen, str((width//SCALE, height//SCALE)), 25, BLUE, 45, 150)
+            py.draw.rect(self.e.screen, BLUE, box, 2)
+            self.e.draw_text(self.e.screen, str((width//SCALE, height//SCALE)), 25, BLUE, 45, 150)
+        
+    def crop(self):
+        w = self.end_mx - self.init_mx+1 # remember to fix
+        h = self.end_my - self.init_my+1 # 
+        start_x = self.init_mx
+        start_y = self.init_my
+
+        image = py.Surface((w, h), py.SRCALPHA)
+        
+        # **** Ein leið *********
+        #cropped_region = self.unscaled_img.subsurface((start_x, start_y, w, h))
+        #image.blit(cropped_region, (0,0))
+        
+        # *********** Önnur leið ***********
+        image.blit(self.unscaled_img, (0,0), (self.init_mx, self.init_my, w, h))
+        self.cropped_imgs.append(image)
+    
+    def save_img_sheet(self):
+        blank_img = py.Surface((120, 67))
+        blank_img.fill(GRAY)
+        x, y = 2,3
+
+        for cr_img in self.cropped_imgs:
+            blank_img.blit(cr_img, (x, y))
+
+            img_length = cr_img.get_width()
+            
+            if x + img_length > 120:
+                img_height = cr_img.get_height()
+                x = 2
+                y = 3 + img_height+3
+            else:
+                x+= img_length+2
+
+        
+        # save the img via personal name of file
+        py.image.save(blank_img, "my_file.png")#"{}.png".format(input()))
+        
