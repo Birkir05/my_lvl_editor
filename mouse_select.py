@@ -16,13 +16,13 @@ class Spritesheet_croper:
         self.right_clicking = False
         
 
-    def load_sheet(self):
-        self.WIDTH = self.e.sky_tileset.get_width()
-        self.HEIGHT = self.e.sky_tileset.get_height()
+    def load_sheet(self, file):
+        self.WIDTH = file.get_width()
+        self.HEIGHT = file.get_height()
         # Redda þessari línu... 
         # passa að hafa alpha gildi þegar crop fallið er notað
-        self.tile_img = py.transform.scale(self.e.sky_tileset, (self.WIDTH*SCALE, self.HEIGHT*SCALE))
-        self.unscaled_img = self.e.sky_tileset
+        self.tile_img = py.transform.scale(file, (self.WIDTH*SCALE, self.HEIGHT*SCALE))
+        self.unscaled_img = file
 
     def croper_events(self):
         for e in py.event.get():
@@ -67,11 +67,11 @@ class Spritesheet_croper:
         self.e.draw_text(self.e.screen, (self.mx, self.my), 25, WHITE, self.WIDTH-50, 50)
         self.e.draw_text(self.e.screen, (self.init_mx, self.init_my, self.end_mx, self.end_my), 25, WHITE, self.WIDTH-50, 100)
         self.select_box()
+    
 
-
-    def run_croper(self):
+    def run_croper(self, file):
         # Þarf að breyta þessu. betra að hlaða inn myndum við fyrsta tilvik klasans
-        self.load_sheet() 
+        self.load_sheet(file) 
         self.running = True
         screen = py.display.set_mode
         self.e.screen = screen((self.WIDTH*SCALE, self.HEIGHT*SCALE))
@@ -135,4 +135,3 @@ class Spritesheet_croper:
         
         # save the img via personal name of file
         py.image.save(blank_img, "my_file.png")#"{}.png".format(input()))
-        
