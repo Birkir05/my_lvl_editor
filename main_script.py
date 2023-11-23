@@ -1,8 +1,10 @@
 import pygame as py
+import json
 from os import path
 from settings import *
 from menu import Menu
 from mouse_select import Spritesheet_croper
+from lvl_constructor import Lvl_maker
 
 class Editor:
 
@@ -16,19 +18,38 @@ class Editor:
         self.font_name = py.font.match_font("arial")
         self.menu = Menu(self)
         self.sprite_croper = Spritesheet_croper(self)
+        self.lvl_maker = Lvl_maker(self)
         self.menu.run_menu()
     
     def load_data(self):
         
-        main_dir = path.dirname(__file__)
-        tiles_img_dir = path.join(main_dir, "tiles_img")
-        deco_img_dir = path.join(main_dir, "deco_img")
+        self.main_dir = path.dirname(__file__)
+        self.croper_tiles_img_dir = path.join(self.main_dir, "crop_tiles_img")
+        self.croper_deco_img_dir = path.join(self.main_dir, "crop_deco_img")
+
+        self.own_tile_img_dir = path.join(self.main_dir, "tile_img")
+        self.own_deco_img_dir = path.join(self.main_dir, "deco_img")
 
         # Spritesheet Croper data
         self.croper_data = {
-            "GrassTiles": py.image.load(path.join(tiles_img_dir, "GrassTiles.png")).convert_alpha(),
-            "Skytile": py.image.load(path.join(tiles_img_dir, "Tileset.png")).convert_alpha()
+            "GrassTiles": py.image.load(path.join(self.croper_tiles_img_dir, "GrassTiles.png")).convert_alpha(),
+            "Skytile": py.image.load(path.join(self.croper_tiles_img_dir, "Tileset.png")).convert_alpha()
         }
+
+        # data for level editor
+        personal_sheets = ["gras", "mosi", "virkar"]
+        self.lvl_maker_data = {}
+
+        for sheet in personal_sheets:
+            img=py.image.load(path.join(self.own_tile_img_dir, f"{sheet}.png")).convert_alpha()
+
+            file = f"{self.own_tile_img_dir}\\{sheet}"
+            with open(f"{file}.json", "r") as json_file:
+                positions_data = json.load(json_file)
+            positions_list = positions_data["positions"]
+
+            self.lvl_maker_data[f"{sheet}"] = [img, positions_list]
+
 
     def events(self):
         for event in py.event.get():
@@ -39,6 +60,8 @@ class Editor:
         surf.fill(BLACK)
         draw_method()
         py.display.flip()
+
+        self.clock.tick(FPS)
 
     def draw_text(self, surf, text, size, color, x, y):
         font = py.font.Font(self.font_name, size) 

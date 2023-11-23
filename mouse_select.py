@@ -1,4 +1,6 @@
 import pygame as py
+import json
+from os import path
 from pygame.locals import *
 from settings import *
 
@@ -9,6 +11,7 @@ class Spritesheet_croper:
         self.e = editor
 
         self.cropped_imgs = []
+        self.cropped_imgs_pos = {"positions": []}
 
         self.init_mx, self.init_my = 0, 0
         self.end_mx, self.end_my = 0, 0
@@ -69,7 +72,7 @@ class Spritesheet_croper:
         self.select_box()
     
 
-    def run_croper(self, file):
+    def run(self, file):
         # Þarf að breyta þessu. betra að hlaða inn myndum við fyrsta tilvik klasans
         self.load_sheet(file) 
         self.running = True
@@ -112,11 +115,12 @@ class Spritesheet_croper:
         #image.blit(cropped_region, (0,0))
         
         # *********** Önnur leið ***********
-        image.blit(self.unscaled_img, (0,0), (self.init_mx, self.init_my, w, h))
+        image.blit(self.unscaled_img, (0,0), (start_x, start_y, w, h))
         self.cropped_imgs.append(image)
+        
     
     def save_img_sheet(self):
-        blank_img = py.Surface((120, 67))
+        blank_img = py.Surface((IMG_SHEET_W, IMG_SHEET_H))
         blank_img.fill(GRAY)
         x, y = 2,3
 
@@ -124,14 +128,22 @@ class Spritesheet_croper:
             blank_img.blit(cr_img, (x, y))
 
             img_length = cr_img.get_width()
-            
+            img_height = cr_img.get_height()
+            self.cropped_imgs_pos["positions"].append([x, y, img_length, img_height])
+
             if x + img_length > 120:
-                img_height = cr_img.get_height()
                 x = 2
                 y = 3 + img_height+3
             else:
                 x+= img_length+2
+            
 
         
         # save the img via personal name of file
-        py.image.save(blank_img, "my_file.png")#"{}.png".format(input()))
+        dir_to_save = self.e.own_tile_img_dir
+        file_name = input("Skrifaðu heitið á skránni þinni: ")
+        file_path = f"{dir_to_save}\\{file_name}"
+        py.image.save(blank_img, f"{file_path}.png")
+
+        with open(f"{file_path}.json", 'w') as json_file:
+            json.dump(self.cropped_imgs_pos, json_file)
