@@ -13,6 +13,7 @@ class Editor:
         self.clock = py.time.Clock()
         self.screen = py.display.set_mode((menu_width, menu_height))
         self.running = True
+        self.trans_color = GRAY
         self.load_data()
 
         self.font_name = py.font.match_font("arial")
@@ -37,11 +38,14 @@ class Editor:
         }
 
         # data for level editor
+        self.chunk_grid = py.image.load("chunk_grid.png").convert()
+        self.chunk_grid.set_colorkey(BLACK)
         personal_sheets = ["gras", "mosi", "virkar"]
         self.lvl_maker_data = {}
 
         for sheet in personal_sheets:
-            img=py.image.load(path.join(self.own_tile_img_dir, f"{sheet}.png")).convert_alpha()
+            img=py.image.load(path.join(self.own_tile_img_dir, f"{sheet}.png")).convert() # Athuga hér
+            img.set_colorkey(self.trans_color)
 
             file = f"{self.own_tile_img_dir}\\{sheet}"
             with open(f"{file}.json", "r") as json_file:
@@ -57,6 +61,7 @@ class Editor:
                 self.running = False
     
     def draw(self, surf, draw_method): # potentially possible to use kwargs here
+        
         surf.fill(BLACK)
         draw_method()
         py.display.flip()
@@ -69,6 +74,12 @@ class Editor:
         text_rect = text_surface.get_rect()
         text_rect.topleft = (x,y)
         surf.blit(text_surface, text_rect)
+    
+    def get_image(self, spritesheet, x, y, w, h):
+        image = py.Surface((w, h), py.SRCALPHA) # Tómur strigi
+        # Lita hluta af spritesheet á strigann
+        image.blit(spritesheet, (0, 0), (x, y, w, h))
+        return image    # skila striga
 
 editor = Editor()
 editor.menu.run_menu()

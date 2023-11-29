@@ -1,3 +1,4 @@
+
 menu_width, menu_height = 700, 800
 
 LVL_E_W, LVL_E_H = 1920, 1080
@@ -10,6 +11,10 @@ TILE_SIZE = 8
 TILE_Y = EDITOR_H//TILE_SIZE
 TILE_X = EDITOR_W//TILE_SIZE
 
+CHUNK_SIZE = 8
+
+UNSCALED_CHUNK = 64, 64
+UPSCALED_CHUNK = 384, 384
 # unscaled dimension for saving own spritesheet 
 # 120 * 135
 IMG_SHEET_W, IMG_SHEET_H = LVL_E_W//16, LVL_E_H//8
@@ -22,6 +27,6 @@ BLUE = (0, 0, 255)
 DARK_BLUE = (0, 128, 128)
 ORANGE = (255, 127, 39)
 
-FPS = 10
+FPS = 30
 
 SCALE = 8
