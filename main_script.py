@@ -40,7 +40,7 @@ class Editor:
         # data for level editor
         self.chunk_grid = py.image.load("chunk_grid.png").convert()
         self.chunk_grid.set_colorkey(BLACK)
-        personal_sheets = ["gras", "mosi", "virkar"]
+        personal_sheets = ["gras", "virkar"]
         self.lvl_maker_data = {}
 
         for sheet in personal_sheets:

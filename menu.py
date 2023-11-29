@@ -71,7 +71,7 @@ class Menu:
                 self.e.sprite_croper.run(file)
             elif self.current_menu == "LvL Editor":
                 file = self.e.lvl_maker_data[self.curr_sheet]
-                self.e.lvl_maker.run(file)
+                self.e.lvl_maker.run(file, self.curr_sheet)
 
         if self.entered:
             self.submenu_entered = not self.submenu_entered

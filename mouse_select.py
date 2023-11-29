@@ -17,6 +17,7 @@ class Spritesheet_croper:
         self.end_mx, self.end_my = 0, 0
         self.clicking = False
         self.right_clicking = False
+        self.cropping = False
         
 
     def load_sheet(self, file):
@@ -36,6 +37,10 @@ class Spritesheet_croper:
             if e.type == py.KEYDOWN:
                 if e.key == py.K_g:
                     grid_is_on = not grid_is_on
+
+                if e.key == py.K_c:
+                    self.cropping = not self.cropping
+
                 if e.key == py.K_q:
                     self.running = False
                     self.e.running = False
@@ -58,7 +63,7 @@ class Spritesheet_croper:
 
                     # Þarft að halda inni hægri takka músarinnar 
                     # áður en maður sleppir vinstri
-                    if self.right_clicking:  
+                    if self.right_clicking or self.cropping:  
                         self.crop()
                         print(self.cropped_imgs)
                         self.right_clicking = False
