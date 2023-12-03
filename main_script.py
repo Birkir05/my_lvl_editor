@@ -1,6 +1,7 @@
 import pygame as py
 import json
 from os import path
+from os import listdir
 from settings import *
 from menu import Menu
 from mouse_select import Spritesheet_croper
@@ -30,17 +31,20 @@ class Editor:
 
         self.own_tile_img_dir = path.join(self.main_dir, "tile_img")
         self.own_deco_img_dir = path.join(self.main_dir, "deco_img")
+        self.own_levels_dir = path.join(self.main_dir, "levels")
+        self.bg_img_dir = path.join(self.main_dir, "bg_img")
 
         # Spritesheet Croper data
         self.croper_data = {
             "GrassTiles": py.image.load(path.join(self.croper_tiles_img_dir, "GrassTiles.png")).convert_alpha(),
-            "Skytile": py.image.load(path.join(self.croper_tiles_img_dir, "Tileset.png")).convert_alpha()
+            "Skytile": py.image.load(path.join(self.croper_tiles_img_dir, "Tileset.png")).convert_alpha(),
+            "Deco_Gras": py.image.load(path.join(self.croper_deco_img_dir, "Decor.png")).convert_alpha()
         }
 
         # data for level editor
         self.chunk_grid = py.image.load("chunk_grid.png").convert()
         self.chunk_grid.set_colorkey(BLACK)
-        personal_sheets = ["gras", "virkar"]
+        personal_sheets = ["gras", "virkar", "prufa", "gras_decoration"]
         self.lvl_maker_data = {}
 
         for sheet in personal_sheets:
@@ -53,6 +57,23 @@ class Editor:
             positions_list = positions_data["positions"]
 
             self.lvl_maker_data[f"{sheet}"] = [img, positions_list]
+
+        # backgrounds data
+        #-------Graslands1_bg--------#
+        graslands1_bg_dir = path.join(self.bg_img_dir, "graslands1_bg")
+        files = listdir(graslands1_bg_dir) # skilar lista af nöfnun í folderinu
+        self.graslands1_bg_imgs = []
+        for bg_name in files:
+            file = path.join(graslands1_bg_dir, bg_name)
+            self.graslands1_bg_imgs.append(py.image.load(file).convert_alpha())
+
+        #-------Graslands2_bg--------#
+        graslands2_bg_dir = path.join(self.bg_img_dir, "graslands2_bg")
+        files = listdir(graslands2_bg_dir) 
+        self.graslands2_bg_imgs = []
+        for bg_name in files:
+            file = path.join(graslands2_bg_dir, bg_name)
+            self.graslands2_bg_imgs.append(py.image.load(file).convert_alpha())
 
 
     def events(self):

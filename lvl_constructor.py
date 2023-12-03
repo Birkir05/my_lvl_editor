@@ -1,8 +1,8 @@
 import pygame as py
+import json
 from settings import *
 
 
-""
 class Lvl_maker:
 
     def __init__(self, editor):
@@ -15,7 +15,12 @@ class Lvl_maker:
         self.middle_click = False
         self.rect_selected = False
         self.delete_is_active = False
+        self.grid_on = True
         self.selected_tile = 0
+
+        self.current_layer = "tile_layer1"
+        self.trans_alpha_value = 128
+        self.opaque_alpha_value = 255
 
         self.all_tile_types = {}
         self.all_tile_imgs = {}
@@ -37,10 +42,9 @@ class Lvl_maker:
             
             self.all_tile_imgs[sheet_name] = tile_imgs
 
-        print(self.all_tile_types)
-
         self.camera = Camera(self)
         self.chunk = Chunk_system(self)
+        self.background = Background(self)
 
     def load_maker(self, file, sheet_name):
         self.current_sheet = sheet_name
@@ -48,18 +52,6 @@ class Lvl_maker:
         self.tile_img = py.transform.scale(self.tile_sheet, (IMG_SHEET_W*4, IMG_SHEET_H*4))
         self.tile_positions = file[1]
         self.rect_objects()
-
-
-    #def load_maker(self, file):
-    #    self.tile_sheet = file[0]
-    #    self.tile_img = py.transform.scale(self.tile_sheet, (IMG_SHEET_W*4, IMG_SHEET_H*4))
-    #    self.tile_positions = file[1]
-    #    self.rect_objects()
-
-    #    # Gets all tile images from personal sprite_sheet
-    #    # in same index order as self.tile_positions
-    #    self.tile_images = [self.e.get_image(self.tile_sheet, p[0], p[1], p[2], p[3])
-    #                         for p in self.tile_positions]
 
         
     def run(self, file, selected_sheet):
@@ -86,20 +78,32 @@ class Lvl_maker:
                 if e.key == py.K_ESCAPE:
                     self.running = False
                     self.e.menu.run_menu()
-                if e.key == py.K_d:
+                elif e.key == py.K_d:
                     self.delete_is_active = True
                     self.rect_selected = False
-                if e.key == py.K_s:
+                elif e.key == py.K_g:
+                    self.grid_on = not self.grid_on
+                elif e.key == py.K_b:
+                    self.background.curr_bg_i = (self.background.curr_bg_i+1) % len(self.background.bgs)
+                    self.background.curr_bg = self.background.bgs[self.background.curr_bg_i]
+                elif e.key == py.K_1:
+                    self.current_layer = "tile_layer1"
+                    self.chunk.alpha_value = self.opaque_alpha_value
+                elif e.key == py.K_2:
+                    self.current_layer = "tile_layer2"
+                    self.chunk.alpha_value = self.trans_alpha_value
+
+                elif e.key == py.K_s:
                     self.save_lvl()
 
             if e.type == py.MOUSEBUTTONDOWN:
                 if e.button == 1:
                     self.clicking = True
                     self.clicked = True
-                if e.button == 2:
+                elif e.button == 2:
                     self.middle_click = True
                     
-                if e.button == 3:
+                elif e.button == 3:
                     self.right_clicking = True
             elif e.type == py.MOUSEBUTTONUP:
                 if e.button == 1:
@@ -115,12 +119,6 @@ class Lvl_maker:
 
             if self.clicked:
                 self.selected_tile = self.select_rect()
-
-            #for i, rect in enumerate(self.rects): 
-            #    if rect.collidepoint(self.mx, self.my):
-            #        if self.clicked:
-            #            self.rect_selected = True
-            #            self.selected_tile = self.select_rect(i)
 
         elif not self.within_tile_sheet():
             if self.clicking:
@@ -142,9 +140,12 @@ class Lvl_maker:
     def draw(self):
         screen = self.e.screen
         
+        self.background.draw(screen)
         self.chunk.render(self.visible_chunks)
 
         screen.blit(self.tile_sheet_surf, (LVL_E_W*0.75, 0))
+
+        self.e.draw_text(screen, self.current_layer, 25, WHITE, LVL_E_W-100, LVL_E_H/2-50)
     
     def rect_objects(self):
         self.tile_sheet_surf = py.Surface((IMG_SHEET_W*4, IMG_SHEET_H*4))
@@ -203,7 +204,10 @@ class Lvl_maker:
         chunk_y = pos[3]
 
         chunk_key = f"{chunk_x};{chunk_y}"
-        cr_chunk_data = self.chunk.level_map[chunk_key]
+        if self.current_layer == "tile_layer1":
+            cr_chunk_data = self.chunk.level_map_l1[chunk_key]
+        elif self.current_layer == "tile_layer2":
+            cr_chunk_data = self.chunk.level_map_l2[chunk_key]
 
         tile_type = self.selected_tile[0] # til þess að greina frá lofti (sem er 0)
         cr_chunk_data[i_cr_tile_in_chunk][1] = tile_type
@@ -219,18 +223,45 @@ class Lvl_maker:
         chunk_y = pos[3]
 
         chunk_key = f"{chunk_x};{chunk_y}"
-        cr_chunk_data = self.chunk.level_map[chunk_key]
+
+        if self.current_layer == "tile_layer1":
+            cr_chunk_data = self.chunk.level_map_l1[chunk_key]
+        elif self.current_layer == "tile_layer2":
+            cr_chunk_data = self.chunk.level_map_l2[chunk_key]
 
         tile_type = 0
         cr_chunk_data[i_cr_tile_in_chunk][1] = tile_type
 
     def save_lvl(self):
-        pass
-    
+        # level_data is an dictionary containing every position of everything
+        # it is later saved as a json file 
+        level_data = {"layer1_tiles": [], # Regular tiles (sprites)
+                      "layer2_tiles": [], # fase through tiles
+                      "ingame_objects": [] # coins, players, mobs etc.
+                      }
+
+        # Mögulega gera það þannig að fjarlægja öll þau hnit úr mappinu sem eru tóm 
+
+        level_data["layer1_tiles"] = self.chunk.level_map_l1
+        level_data["layer2_tiles"] = self.chunk.level_map_l2
+        
+        dir_to_save = self.e.own_levels_dir
+        file_name = input("Skrifaðu heitið á borðinu þínu: ")
+        file_path = f"{dir_to_save}\\{file_name}"
+
+        with open(f"{file_path}.json", 'w') as json_file:
+            json.dump(level_data, json_file)
+
+
 class Chunk_system:
     def __init__(self, level_data):
         self.level_data = level_data
-        self.level_map = {}
+        self.level_map_l1 = {}
+        self.level_map_l2 = {}
+        self.layers = [self.level_map_l2, self.level_map_l1]
+        self.ingame_objects = {}
+
+        self.alpha_value = 255
 
         self.retrieve_data()
         
@@ -279,9 +310,13 @@ class Chunk_system:
                 target_y = y + int(self.scroll[1]/(CHUNK_SIZE*TILE_SIZE))
                 target_chunk = f"{target_x};{target_y}" # pos of chunk
 
-                # add an empty chunk to level map if it doesnt exist already.
-                if target_chunk not in self.level_map:
-                    self.level_map[target_chunk] = self.generate_chunk()
+                # add an empty chunk to the 2 layers in level map 
+                # if it doesnt exist already.
+                if target_chunk not in self.level_map_l1:
+                    self.level_map_l1[target_chunk] = self.generate_chunk()
+                if target_chunk not in self.level_map_l2:
+                    self.level_map_l2[target_chunk] = self.generate_chunk()
+
                 # adds current chunk that is visible on screen
                 visible_chunks.append([target_x, target_y])
 
@@ -292,67 +327,59 @@ class Chunk_system:
         chunk_height = CHUNK_SIZE*TILE_SIZE
         chunk_width = CHUNK_SIZE*TILE_SIZE
 
-        for chunk_x, chunk_y in chunks_pos:
-            chunk_key = f"{chunk_x};{chunk_y}"
-            chunk_x = chunk_x*384 # maybe clearer to call this variable true_chunk_x
-            chunk_y = chunk_y*384
-            chunk_surf = py.Surface((chunk_width, chunk_height)) # (64x64) 
-            deco_chunk_surf = py.Surface((chunk_width, chunk_height)) # VANTAR py.SRCALPHA ??
-            tile_chunk_surf = py.Surface((chunk_width, chunk_height))
-            for tile in self.level_map[chunk_key]:
-                tile_type = tile[1]
-                
+        for layer_index, layer in enumerate(self.layers, 1):
+            layer_surf = py.Surface((LVL_E_W, LVL_E_H))
+            layer_surf.set_colorkey(BLACK)
 
-                # destination of tile on current chunk
-                tile_destination = tile[0][0]*TILE_SIZE-self.scroll[0], tile[0][1]*TILE_SIZE-self.scroll[1]
+            for chunk_x, chunk_y in chunks_pos:
+                chunk_key = f"{chunk_x};{chunk_y}"
+                chunk_x = chunk_x*384 # maybe clearer to call this variable true_chunk_x
+                chunk_y = chunk_y*384
+                chunk_surf = py.Surface((chunk_width, chunk_height)) # (64x64) 
+                chunk_surf.set_colorkey(BLACK)
+                #deco_chunk_surf = py.Surface((chunk_width, chunk_height)) # VANTAR py.SRCALPHA ??
+                tile_chunk_surf = py.Surface((chunk_width, chunk_height))
+                tile_chunk_surf.set_colorkey(BLACK)
+                for tile in layer[chunk_key]:
+                    tile_type = tile[1]
 
-                if tile_type > 0: # ef það er tile (þá á líka er það líka sprite)
-                    sheet_type, index_of_img = self.get_category(tile_type)
+                    # destination of tile on current chunk
+                    tile_destination = tile[0][0]*TILE_SIZE-self.scroll[0], tile[0][1]*TILE_SIZE-self.scroll[1]
 
-                    tile_chunk_surf.blit(self.all_tile_imgs[sheet_type][index_of_img], tile_destination) # -1 to compensate right index in saved images
-                elif tile_type < 0: # ef það er decoration (f.e. tree)
-                    deco_chunk_surf.blit(self.all_tile_imgs[sheet_type][index_of_img], tile_destination)
+                    if tile_type > 0: # ef það er tile (þá á líka er það líka sprite)
+                        sheet_type, index_of_img = self.get_category(tile_type)
 
-                chunk_surf.blit(deco_chunk_surf, (0,0))
+                        tile_img = self.all_tile_imgs[sheet_type][index_of_img]
+
+                        if layer_index == 2: # Þ.e. ef þetta er layer1
+                            tile_img.set_alpha(self.alpha_value)
+
+                        self.render_alligned(tile_chunk_surf, tile_img, tile_destination)
+
+                    #elif tile_type < 0: # ef það er decoration (f.e. tree)
+                    #    deco_chunk_surf.blit(self.all_tile_imgs[sheet_type][index_of_img], tile_destination)
+
+                #chunk_surf.blit(deco_chunk_surf, (0,0))
                 chunk_surf.blit(tile_chunk_surf, (0,0))
-            
-            chunk_surf = py.transform.scale(chunk_surf, (384, 384))
-
-            self.screen.blit(chunk_surf, (chunk_x, chunk_y))
-            self.screen.blit(self.grid_img, (chunk_x, chunk_y))
-        
-
-    def render_safe(self, chunks_pos):
-        screen_surf = py.Surface((EDITOR_W, EDITOR_H)) # (320x180) pixlar
-        chunk_height = CHUNK_SIZE*TILE_SIZE
-        chunk_width = CHUNK_SIZE*TILE_SIZE
-
-        for chunk_x, chunk_y in chunks_pos:
-            chunk_key = f"{chunk_x};{chunk_y}"
-            chunk_x = chunk_x*384 # maybe clearer to call this variable true_chunk_x
-            chunk_y = chunk_y*384
-            chunk_surf = py.Surface((chunk_width, chunk_height)) # (64x64) 
-            deco_chunk_surf = py.Surface((chunk_width, chunk_height)) # VANTAR py.SRCALPHA ??
-            tile_chunk_surf = py.Surface((chunk_width, chunk_height))
-            for tile in self.level_map[chunk_key]:
-
-                # destination of tile on current chunk
-                tile_destination = tile[0][0]*TILE_SIZE-self.scroll[0], tile[0][1]*TILE_SIZE-self.scroll[1]
-
-                if tile[1] > 0: # ef það er tile (þá á líka er það líka sprite)
-                    tile_chunk_surf.blit(self.level_data.tile_images[tile[1]-1], tile_destination) # -1 to compensate right index in saved images
-                elif tile[1] < 0: # ef það er decoration (f.e. tree)
-                    deco_chunk_surf.blit(self.level_data.tile_images[tile[1]], tile_destination)
-
-                chunk_surf.blit(deco_chunk_surf, (0,0))
-                chunk_surf.blit(tile_chunk_surf, (0,0))
-            
-            chunk_surf = py.transform.scale(chunk_surf, (384, 384))
-
-            self.screen.blit(chunk_surf, (chunk_x, chunk_y))
-            self.screen.blit(self.grid_img, (chunk_x, chunk_y))
                 
+                chunk_surf = py.transform.scale(chunk_surf, (384, 384))
+                
+                layer_surf.blit(chunk_surf, (chunk_x, chunk_y))
+                if layer_index == 2 and self.level_data.grid_on:
+                    layer_surf.blit(self.grid_img, (chunk_x, chunk_y))
 
+            self.screen.blit(layer_surf, (0,0))
+            
+    def render_alligned(self, surf, img, destination):
+        tile_dest_x = destination[0]
+        tile_dest_y = destination[1]
+        w = img.get_width()
+        h = img.get_height()
+        tile_offset_w = tile_dest_x+TILE_SIZE - w
+        tile_offset_h = tile_dest_y+TILE_SIZE - h
+        surf.blit(img, (tile_offset_w, tile_offset_h))
+
+ 
 
 class Camera:
     def __init__(self, level_data):
@@ -364,3 +391,30 @@ class Camera:
 
     def zoom(self):
         pass 
+
+
+
+class Background:
+    def __init__(self, level_data) -> None:
+        self.level_data = level_data
+        self.retrieve_data()
+
+        self.bgs = [self.bg1,
+                    self.bg2]
+        
+        self.curr_bg_i = 0
+        self.curr_bg = self.bgs[self.curr_bg_i]
+
+    def retrieve_data(self):
+        bg1 = self.level_data.e.graslands1_bg_imgs
+        self.bg1 = [py.transform.scale(bg_layer, (1920, 1080)) for bg_layer in bg1]
+        bg2 = self.level_data.e.graslands2_bg_imgs
+        self.bg2 = [py.transform.scale(bg_layer, (1920, 1080)) for bg_layer in bg2]
+        self.scroll = self.level_data.camera.scroll
+    
+    def draw(self, surf):
+        for bg_layer in self.curr_bg:
+            surf.blit(bg_layer, (0,0))
+
+    def move(self):
+        pass

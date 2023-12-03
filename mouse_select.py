@@ -129,20 +129,26 @@ class Spritesheet_croper:
         blank_img.fill(GRAY)
         x, y = 2,3
 
-        for cr_img in self.cropped_imgs:
-            blank_img.blit(cr_img, (x, y))
+        largest_height_in_row = 0
 
+        for cr_img in self.cropped_imgs:
             img_length = cr_img.get_width()
             img_height = cr_img.get_height()
-            self.cropped_imgs_pos["positions"].append([x, y, img_length, img_height])
 
-            if x + img_length > 120:
-                x = 2
-                y = 3 + img_height+3
+            if largest_height_in_row < img_height:
+                largest_height_in_row = img_height
+                
+            if (x + img_length) >= (120-2):
+                x = 2 + img_length +2
+                y += 3 + largest_height_in_row
+                largest_height_in_row = 0
             else:
                 x+= img_length+2
             
-
+            x-= img_length+2
+            blank_img.blit(cr_img, (x, y)) 
+            self.cropped_imgs_pos["positions"].append([x, y, img_length, img_height])
+            x+= img_length+2
         
         # save the img via personal name of file
         dir_to_save = self.e.own_tile_img_dir
@@ -152,3 +158,5 @@ class Spritesheet_croper:
 
         with open(f"{file_path}.json", 'w') as json_file:
             json.dump(self.cropped_imgs_pos, json_file)
+
+        self.cropped_imgs = []
