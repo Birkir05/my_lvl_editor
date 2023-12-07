@@ -38,7 +38,8 @@ class Editor:
         self.croper_data = {
             "GrassTiles": py.image.load(path.join(self.croper_tiles_img_dir, "GrassTiles.png")).convert_alpha(),
             "Skytile": py.image.load(path.join(self.croper_tiles_img_dir, "Tileset.png")).convert_alpha(),
-            "Deco_Gras": py.image.load(path.join(self.croper_deco_img_dir, "Decor.png")).convert_alpha()
+            "Deco_Gras": py.image.load(path.join(self.croper_deco_img_dir, "Decor.png")).convert_alpha(),
+            "Character": py.image.load(path.join(self.croper_tiles_img_dir, "CharacterSheet.png")).convert_alpha()
         }
 
         # data for level editor

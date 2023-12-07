@@ -237,7 +237,8 @@ class Lvl_maker:
         # it is later saved as a json file 
         level_data = {"layer1_tiles": [], # Regular tiles (sprites)
                       "layer2_tiles": [], # fase through tiles
-                      "ingame_objects": [] # coins, players, mobs etc.
+                      "ingame_objects": [], # coins, players, mobs etc.
+                      "background": self.background.curr_bg_i
                       }
 
         # Mögulega gera það þannig að fjarlægja öll þau hnit úr mappinu sem eru tóm 

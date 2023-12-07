@@ -159,4 +159,4 @@ class Spritesheet_croper:
         with open(f"{file_path}.json", 'w') as json_file:
             json.dump(self.cropped_imgs_pos, json_file)
 
-        self.cropped_imgs = []
+        #self.cropped_imgs = []
